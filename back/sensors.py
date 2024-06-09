@@ -4,18 +4,17 @@ from entities.sensor import Sensor
 from entities.sensorData import SensorData
 from entities.value import Value
 from Ulog import ULog
+import ast
 
-
-
-
+order=0
 
 def getSensorIds(flightId):
     conn = psycopg2.connect('postgresql://postgres:root@localhost:5432/drons')
     cursor = conn.cursor()
-    fId=1
+    fId=flightId
     cursor.execute('SELECT dataid FROM values WHERE flightid=%s',(fId,))
     sensorD_ids=cursor.fetchall()
-    sensorD_ids=[1,2]
+    #sensorD_ids=[1,2]
     cursor.close()
     conn.close()
     return sensorD_ids
@@ -31,7 +30,6 @@ def getDataSensorsOfFlight(dataId):
         sensor=Sensor(row[6],row[7])
         sensor_data=SensorData(row[0],row[2],row[3],row[4],row[5])
         sensor_data.setSensor(sensor)
-        #print(sensor_data.getLogName())
         sensor_data.setLogName("circuit_breaker_flight_termination_disabled")
         sensorDatas_arr.append(sensor_data)
     cursor.close()
@@ -45,12 +43,6 @@ def getDataSensorsOfFlight(dataId):
 
 
 
-#for i in sensorDatas_arr:
-#   print(i.getDataName())
-
-
-#sensorDatas_arr=getDataSensorsOfFlight(sensorD_ids)
-
 def getValues(datas_arr):
     value_arr=[]
     ulog = ULog("./test.ulg", None, False)
@@ -60,8 +52,6 @@ def getValues(datas_arr):
     data.sort(key=lambda x: x.name)
     maxlen = 0
     for d in data:
-        print(d.data)
-        #print("-----")
         for i in datas_arr:
             if(i.getLogName() in d.data):
                 for j in range(len(d.data[i.getLogName()])):
@@ -79,14 +69,22 @@ def getValues(datas_arr):
 
 
         
-        
-
-
-#for i in value_arr:
-    #print(i.getValue())
-    #print(i.getTimestamp())
-    #print(i.getSensorData().getUoM())
-    #print("--------")
+def getValuesLog(data_arr):
+    global order
+    value_arr=[]
+    with open("logs.txt", "r",encoding='utf-8') as data:
+        dict = ast.literal_eval(data.read())
+        for d in dict:
+            for i in data_arr:
+                if i.getDataName() in d:
+                    order%=len(d[i.getDataName()])
+                    print(order)
+                    v=Value(0,str(d[i.getDataName()][order]),int(d['Время'][order]))
+                    v.setSensorData(i)
+                    value_arr.append(v)
+    order+=1
+    return value_arr
+ 
 
 
 #    for d in data:
@@ -97,3 +95,7 @@ def getValues(datas_arr):
 #           result[d.name + '.' + key] = d.data[key]
 
 
+#for j in range(len(d[i.getDataName()])):
+ #                       v=Value(0,str(d[i.getDataName()][j]),int(d['Время'][j]))
+  #                      v.setSensorData(i)
+   #                     value_arr.append(v)

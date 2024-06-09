@@ -32,6 +32,13 @@ class SensorData:
     def getUoM(self):
         return self.UoM
     
+    def getSensorDict(self):
+        d={
+            'sensorId':self.sensor.getSensorId(),
+            'name':self.sensor.getName()
+        }
+        return d
+    
     def setDataId(self,dataId):
         self.dataId=dataId
     
